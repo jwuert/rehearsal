@@ -24,6 +24,13 @@ repositories {
             password = System.getenv("GITHUB_TOKEN")
         }
     }
+    maven {
+        url = uri("https://maven.pkg.github.com/jwuert/sport")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
     mavenCentral()
     maven {
         url "https://plugins.gradle.org/m2/"

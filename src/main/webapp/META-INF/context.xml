@@ -1,0 +1,11 @@
+<Context reloadable="true">
+    <!-- MAKE reloadable="false" for production!!! -->
+    <!-- Use DataSourceRealm with a JNDI DataSource -->
+    <Realm className="org.apache.catalina.realm.DataSourceRealm"
+           dataSourceName="jdbc/rehearsal"
+           userTable="USER"
+           userNameCol="USERNAME"
+           userCredCol="PASSWORD"
+           userRoleTable="V_ROLE"
+           roleNameCol="ROLENAME" />
+</Context>

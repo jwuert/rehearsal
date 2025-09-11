@@ -1,8 +1,150 @@
-<html>
+<!DOCTYPE html>
+<html lang="de">
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="icon" href="/rehearsal/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="sport/css/style.css">
+    <link rel="stylesheet" type="text/css" href="sport/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <script type="text/javascript" src="sport/lib/jquery-3.5.1.slim.min.js"></script>
+    <script type="text/javascript" src="sport/lib/popper.min.js"></script>
+    <script type="text/javascript" src="sport/lib/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+
+        function log(text) {
+            // console.log( (new Date).getTime() + ": " + (!Object.isUndefined(text) && text !== null ? text.escapeHTML() : "null") );
+            console.log( (new Date).getTime() + ": " + ( text !== null ? text : "null") );
+        }
+
+
+
+        var reload = (sessionStorage.getItem("data")==null || sessionStorage.getItem("data")=="null" ? false : true);
+        log("data: " + sessionStorage.getItem("data") + ", reload: " + reload);
+        var _actionMap = {};
+        var _orig = (reload ? JSON.parse(sessionStorage.getItem("orig")) : null );
+        var _data = null;//(reload ? JSON.parse(sessionStorage.getItem("data")) : null );
+        var _model = (reload ? JSON.parse(sessionStorage.getItem("model")) : null );
+	    var _appName = "-";
+
+        var ws;
+        function initWS() {
+            log("Running project: " + getProjectId());
+            var wsUri = "ws://" + window.location.hostname + ":" + window.location.port + "/" + getProjectId() + "/socket";
+            log("connecting to: " + wsUri);
+            ws = new WebSocket(wsUri);
+            // ws = new WebSocket("ws://localhost:8887");
+            ws.onopen = function() {
+                log("[WebSocket#onopen]\n");
+            }
+            ws.onmessage = function(e) {
+                jo = JSON.parse(e.data);
+                log("[WebSocket#onmessage] Message: '" + jo.command + "'\n");
+                handleMessage(ws, e.data);
+            }
+            ws.onclose = function() {
+                log("[WebSocket#onclose]\n");
+                ws = null;
+                document.getElementById("content").innerHTML="";
+            }
+            if (ws) {
+                setTimeout(function() {
+                    log("ping");
+                    // ws.send("{\"command\":\"ping\"}");
+                    // refactor:
+    //                    makeToolbar();
+    //                    if (_data!=null) {
+    //                        updateToolbar();
+    //                        createNavigation(_data);
+    //                    }
+                    // updateContentStatus();
+                    // openDocument("test");
+
+                    // XXXXX
+                    var id = 201;
+                    ws.send("{\"command\":\"openDocument\", \"id\":"+id+"}");
+                    console.log("data: " + _data);
+
+
+                }, 500);
+                // $("header").innerHTML="<br/>Speedy";
+            }
+        }
+
+        function requestElement(parentId, id) {
+            if (ws) {
+                ws.send("{\"command\":\"requestElement\", \"parentId\":"+parentId+", \"id\":"+id+"}");
+            }
+        }
+
+
+        function getProjectId() {
+            return window.location.pathname.split("/")[1];
+        }
+
+        function handleMessage(ws, data) {
+            jo = JSON.parse(data);
+            var command = jo["command"];
+            var editPermission = jo["editPermission"];
+            console.log("command: " + command);
+
+            if (command==="setData") {
+                _data = jo["data"];
+                _orig = JSON.parse(JSON.stringify(_data));
+                addParents(_data, _data["id"]);
+                console.log(_data);
+    //                createNavigation(_data);
+    //                selectElement(_data["id"], "Attributes");
+            } else if (command==="setModel") {
+                _model = jo["data"];
+                _appName = jo["appName"];
+            } else if (command==="setDocumentList") {
+                var documentReferenceMap = jo["data"];
+                for (var name in documentReferenceMap) {
+                    var id = documentReferenceMap[name];
+                    log("doc: " + name + ", " + id);
+                }
+            }
+        }
+
+        function addParents(data, parentId) {
+            data.parentId = parentId;
+            var children = data["children"];
+            for (var i=0; i<children.length; i++) {
+                addParents(children[i],data.id);
+            }
+        }
+
+
+
+        // this is important to assure correct output from JSON.stringify!
+	    delete Array.prototype.toJSON
+
+		// document.observe("dom:loaded", function() {
+		$( document ).ready(function() {
+		    if (!window.WebSocket) {
+	    	    alert("FATAL: WebSocket not natively supported. This demo will not work!");
+	    	}
+ 			initWS();
+
+
+
+		});
+		window.onbeforeunload = function (evt) {
+			sessionStorage.setItem("data", JSON.stringify(_data));
+//			sessionStorage.setItem("clipboard", JSON.stringify(_clipboard));
+			sessionStorage.setItem("orig", JSON.stringify(_orig));
+			sessionStorage.setItem("model", JSON.stringify(_model));
+        }
+    </script>
+    <title>Probenplaner</title>
 </head>
 <body>
 <h1>Heeey!</h1>
+
+<div id="content" style="padding:10px"></div>
+
+
 </body>
 </html>

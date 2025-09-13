@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="icon" href="/rehearsal/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="sport/css/style.css">
+    <link rel="stylesheet" type="text/css" href="sport/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <script type="text/javascript" src="sport/lib/jquery-3.5.1.slim.min.js"></script>
+    <script type="text/javascript" src="sport/lib/popper.min.js"></script>
+    <script type="text/javascript" src="sport/lib/bootstrap.min.js"></script>
+    <script type="text/javascript" src="sport/js/datamodel.js"></script>
+    <script type="text/javascript">
+
+        var rootName = "Schubert";
+        var rootID = 1;
+
+        var upcomingAppointment = "";
+        var _userName = "";
+        var _userId = "";
+        var _userMap = {};
+        var _next_id = -1;
+        var reload = (sessionStorage.getItem("data")==null || sessionStorage.getItem("data")=="null" ? false : true);
+        var _actionMap = {};
+        var _orig = (reload ? JSON.parse(sessionStorage.getItem("orig")) : null );
+        var _data = null;//(reload ? JSON.parse(sessionStorage.getItem("data")) : null );
+        var _model = (reload ? JSON.parse(sessionStorage.getItem("model")) : null );
+	    var _appName = "-";
+	    var documentMap = {};
+
+        var ws;
+        function initWS() {
+            console.log("Running project: " + getProjectId());
+            // var wsUri = "ws://" + window.location.hostname + ":" + window.location.port + "/" + getProjectId() + "/socket";
+            const wsUri = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.hostname + ":" + window.location.port + "/" + getProjectId() + "/socket";
+
+            console.log("connecting to: " + wsUri);
+            ws = new WebSocket(wsUri);
+            ws.onopen = function() {
+                console.log("[WebSocket#onopen]\n");
+            }
+            ws.onmessage = function(e) {
+                jo = JSON.parse(e.data);
+                console.log("[WebSocket#onmessage] Message: '" + jo.command + "'\n");
+                handleMessage(ws, e.data);
+            }
+            ws.onclose = function() {
+                console.log("[WebSocket#onclose]\n");
+                ws = null;
+                document.getElementById("message").innerHTML="Tschöö!";
+                document.getElementById("timeline").innerHTML="";
+                document.getElementById("dialog").innerHTML="";
+            }
+            if (ws) {
+                setTimeout(function() {
+                    for (var id in documentMap) {
+                        var name = documentMap[id];
+                        if (name==rootName) {
+                            rootId = id;
+                        }
+                    }
+                    ws.send("{\"command\":\"openDocument\", \"id\":"+rootId+"}");
+                }, 500);
+                // $("header").innerHTML="<br/>Speedy";
+            }
+        }
+
+        function requestElement(parentId, id) {
+            if (ws) {
+                ws.send("{\"command\":\"requestElement\", \"parentId\":"+parentId+", \"id\":"+id+"}");
+            }
+        }
+
+        function getProjectId() {
+            return window.location.pathname.split("/")[1];
+        }
+
+        function showDialog(id, datestrvis) {
+            var meta = _model["Appointment"]["attributes"]["type"];
+            var items = meta["items"];
+
+            var appointment = getElement(_data, id);
+            var aptMsg = appointment.attributes["message"];
+            var aptType = appointment.attributes["type"];
+            var typeLabel = items[aptType];
+            var color = "";
+            var html = "<div class='modal-content'>";
+		    if (appointment.id == upcomingAppointment.id) {
+		        color="orange";
+		    } else {
+		        color="black";
+		    }
+		    html += " <div class='modal-header'>";
+		    html += "  <h4 class='modal-title' align='center' style='width:100%;color:" + color + "'>" + datestrvis + "</h4>";
+		    html += " </div>";
+		    html += " <div class='modal-body '>";
+            html += " <div class=\"info\">" + typeLabel + "</div>";
+            if (aptMsg != "") {
+                html += "<hr/>";
+                html += "<div class=\"info\" style=\"color:blue\">" + aptMsg + "</div>";
+            }
+            html += "<hr/>";
+            var cancelled = isCancelled(appointment);
+            if (cancelled) {
+                html += "<button type='button' class='btn btn-success' style='width:100%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Termin nicht absagen</button>";
+            } else {
+                html += "<button type='button' class='btn btn-danger' style='width:100%' onclick='javascript:cancelAppointment("+appointment.id+")\'>Termin absagen</button>";
+            }
+
+            html += " </div>";
+            html += " <div class='modal-footer'>";
+            html += "  <button id='okBtn' type='button' class='btn btn-dark' onclick='javascript:hideDialog()\'>Zurück</button>";
+            html += " </div>";
+            html += "</div>";
+
+            document.getElementById("dialog").innerHTML=html;
+            document.getElementById("dialog").style.display='block';
+        }
+
+        function hideDialog() {
+            document.getElementById("dialog").style.display='none';
+        }
+
+        function isCancelled(appointment) {
+            var cancelled = false;
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                if (cancellation && cancellation.attributes.userid == _userId) {
+                    cancelled = true;
+                }
+            }
+            return cancelled;
+        }
+
+        function getActiveUserCancellation(appointment) {
+            var cancellation = "";
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                if (cancellation && cancellation.attributes.userid == _userId) {
+                    cancellation = cancellation;
+                }
+            }
+            return cancellation;
+        }
+
+        function getCancelledUsers(appointment) {
+            var cancelledUsers = "";
+            var sep = "";
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                var name = _userMap[cancellation.attributes["userid"]];
+                if (!name || name=="") { name = cancellation.attributes["userid"]; }
+                cancelledUsers += sep+name;
+                sep = ", ";
+            }
+            return cancelledUsers;
+        }
+
+        function cancelAppointment(id) {
+            var appointment = getElement(_data, id);
+
+            var attributes = {};
+            attributes["userid"] = _userId;
+            var newElement = { id: _next_id, parentId: appointment.id, type: "Cancellation", order: 0, attributes: attributes, children: [] }
+            appointment.children.push(newElement);
+			newElement.parentId = appointment.id;
+
+            ws.send("{\"command\":\"save\", \"data\":" + JSON.stringify(_data) + ", \"selectedId\":" + appointment.id + "}");
+            hideDialog();
+        }
+
+        function revokeCancellation(id) {
+            var appointment = getElement(_data, id);
+            var cancellation = getActiveUserCancellation(appointment);
+
+            if (cancellation != "") {
+                // ws.send("{\"command\":\"deleteElement\", \"id\":" + cancellationid + "}");
+                appointment.children.splice( appointment.children.indexOf(cancellation), 1 );
+			    cancellation.parentId = cancellation.id;
+			    ws.send("{\"command\":\"save\", \"data\":" + JSON.stringify(_data) + ", \"selectedId\":" + appointment.id + "}");
+                hideDialog();
+            }
+        }
+
+        function showTimeline() {
+                upcomingAppointment = "";
+                var html = "";
+                var cancelledUsers = "";
+                var list = lookupElement(_data, "Appointment");
+                for (var i=0; i<list.length; i++) {
+                    var appointment = list[i];
+                    var aptId = appointment.id;
+                    var dt = appointment.attributes["date"];
+                    var dateYear = dt.substring(0,4);
+                    var dateMonth = dt.substring(5,7);
+                    var dateDay = dt.substring(8,10);
+                    var datestr = dateYear + "-" + dateMonth + "-" + dateDay;
+                    var datestrvis = dateDay + "." + dateMonth + "." + dateYear;
+
+                    var d = new Date(datestr);
+                    var today = new Date();
+                    var outdated = false;
+
+                    if (d >= today && upcomingAppointment == "") {
+                        upcomingAppointment = appointment;
+                    } else if (d < today) {
+                        outdated = true;
+                    }
+                    var cancelled = isCancelled(appointment);
+
+                    var btnClass = cancelled ? "btn btn-outline-primary" : "btn btn-primary";
+                    if (appointment==upcomingAppointment) {
+                        var cancelledUsers = getCancelledUsers(appointment);
+                        btnClass = cancelled ? "btn btn-outline-warning" : "btn btn-warning";
+                        var msg = "<h2>Probenplaner</h2><br/>";
+                        msg += "<h4>" + _userName + "</h4><br/>";
+                        msg += "Nächster Termin: " + datestrvis + "<br/>";
+                        if (cancelledUsers == "") {
+                            msg += "Keine Absagen!<br/>";
+                        } else {
+                            msg += "Absagen: " + cancelledUsers + "<br/>";
+                        }
+                        var aptMsg = appointment.attributes["message"];
+                        if (aptMsg != "") {
+                            msg += "<br/><dev style=\"color:blue\">" + aptMsg + "<br/><br/>";
+                        }
+                        document.getElementById("message").innerHTML=msg;
+
+                    }
+                    html += "<div class=\"p-1\">";
+                    html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">" + datestrvis + "</button><br/>";
+                    html += "</div>";
+                }
+                html += "";
+                document.getElementById("timeline").innerHTML=html;
+        }
+
+        function handleMessage(ws, data) {
+            jo = JSON.parse(data);
+            var command = jo["command"];
+            var editPermission = jo["editPermission"];
+            console.log("command: " + command);
+
+            if (command==="setData") {
+                _data = jo["data"];
+                _orig = JSON.parse(JSON.stringify(_data));
+                addParents(_data, _data["id"]);
+                showTimeline();
+
+            } else if (command==="setModel") {
+                _model = jo["data"];
+                _appName = jo["appName"];
+                _userMap = jo["userMap"];
+                console.log("UserMap:");
+                console.log(_userMap);
+            } else if (command==="setUserId") {
+                _userId = jo["userId"];
+                _userName = _userMap[_userId];
+            } else if (command==="setDocumentList") {
+                var documentReferenceMap = jo["data"];
+                for (var name in documentReferenceMap) {
+                    var id = documentReferenceMap[name];
+                    documentMap[id] = name;
+                }
+            }
+        }
+
+        function addParents(data, parentId) {
+            data.parentId = parentId;
+            var children = data["children"];
+            for (var i=0; i<children.length; i++) {
+                addParents(children[i],data.id);
+            }
+        }
+
+
+
+        // this is important to assure correct output from JSON.stringify!
+	    delete Array.prototype.toJSON
+
+		// document.observe("dom:loaded", function() {
+		$( document ).ready(function() {
+		    if (!window.WebSocket) {
+	    	    alert("FATAL: WebSocket not natively supported. This demo will not work!");
+	    	}
+ 			initWS();
+
+		});
+		window.onbeforeunload = function (evt) {
+			sessionStorage.setItem("data", JSON.stringify(_data));
+//			sessionStorage.setItem("clipboard", JSON.stringify(_clipboard));
+			sessionStorage.setItem("orig", JSON.stringify(_orig));
+			sessionStorage.setItem("model", JSON.stringify(_model));
+        }
+    </script>
+    <title>Probenplaner</title>
+</head>
+<body>
+
+<div style="margin-left:auto;margin-right:auto;width:300px">
+    <br/>
+    <div id="message"></div>
+    <!-- div id="content" style="padding:10px">huhu</div -->
+    <div id="timeline"></div>
+</div>
+<style>
+    #dialog {
+      position: fixed;
+      top: 50%;      /* move to the middle */
+      left: 50%;
+      transform: translate(-50%, -50%); /* center it exactly */
+      background: white;   /* modal background */
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      width: 400px;
+      max-width: 90%;
+      z-index: 1000;
+    }
+</style>
+
+<div id="dialog" style="display:none"></div>
+</div>
+</body>
+</html>

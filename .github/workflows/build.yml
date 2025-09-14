@@ -39,7 +39,8 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "build/libs/rehearsal.war"
-        target: "/opt/apache-tomee-webprofile-10.1.1/webapps/"
+        target: /opt/apache-tomee-webprofile-10.1.1/webapps/rehearsal.war
+        tar_exec: ""
         debug: true
 
         

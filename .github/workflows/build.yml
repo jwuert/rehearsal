@@ -32,6 +32,11 @@ jobs:
       env:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ secrets.GH_PACKA_GES_TOKEN }}
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
     - name: Deploy WAR via SSH
       uses: appleboy/ssh-action@v0.1.7
       with:
@@ -39,7 +44,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          scp -o StrictHostKeyChecking=no build/libs/rehearsal.war ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/apache-tomee-webprofile-10.1.1/webapps/
+          scp build/libs/rehearsal.war ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/apache-tomee-webprofile-10.1.1/webapps/
         
   dependency-submission:
 

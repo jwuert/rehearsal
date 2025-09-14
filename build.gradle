@@ -60,6 +60,11 @@ publishing {
         }
     }
 }
+
+war {
+    archiveFileName = "rehearsal.war"
+}
+
 test {
     useJUnitPlatform()
 }

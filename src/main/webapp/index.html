@@ -134,14 +134,14 @@
         }
 
         function getActiveUserCancellation(appointment) {
-            var cancellation = "";
+            var activeUserCancellation = "";
             for (var i=0; i<appointment.children.length; i++) {
                 var cancellation = appointment.children[i];
                 if (cancellation && cancellation.attributes.userid == _userId) {
-                    cancellation = cancellation;
+                    activeUserCancellation = cancellation;
                 }
             }
-            return cancellation;
+            return activeUserCancellation;
         }
 
         function getCancelledUsers(appointment) {
@@ -159,7 +159,7 @@
 
         function cancelAppointment(id) {
             var appointment = getElement(_data, id);
-
+            console.log("CANCEL: " + appointment.id + ", " + appointment.attributes["date"]);
             var attributes = {};
             attributes["userid"] = _userId;
             var newElement = { id: _next_id, parentId: appointment.id, type: "Cancellation", order: 0, attributes: attributes, children: [] }
@@ -173,7 +173,7 @@
         function revokeCancellation(id) {
             var appointment = getElement(_data, id);
             var cancellation = getActiveUserCancellation(appointment);
-
+            console.log("REVOKE: " + cancellation.id + ", " + cancellation.attributes["userid"]);
             if (cancellation != "") {
                 // ws.send("{\"command\":\"deleteElement\", \"id\":" + cancellationid + "}");
                 appointment.children.splice( appointment.children.indexOf(cancellation), 1 );

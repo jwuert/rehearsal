@@ -39,7 +39,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          scp -i ${{ secrets.SSH_PRIVATE_KEY }} build/libs/rehearsal.war ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/apache-tomee-webprofile-10.1.1/webapps/
+          scp build/libs/rehearsal.war ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/apache-tomee-webprofile-10.1.1/webapps/
         
   dependency-submission:
 

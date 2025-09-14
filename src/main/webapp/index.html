@@ -14,13 +14,14 @@
     <script type="text/javascript">
 
         var rootName = "Schubert";
-        var rootID = 1;
+        var rootId = 1;
 
         var upcomingAppointment = "";
         var _userName = "";
         var _userId = "";
         var _userMap = {};
         var _next_id = -1;
+        var _superuser = false;
         var reload = (sessionStorage.getItem("data")==null || sessionStorage.getItem("data")=="null" ? false : true);
         var _actionMap = {};
         var _orig = (reload ? JSON.parse(sessionStorage.getItem("orig")) : null );
@@ -96,16 +97,38 @@
 		    html += " </div>";
 		    html += " <div class='modal-body '>";
             html += " <div class=\"info\">" + typeLabel + "</div>";
+
+            html += "<table>";
+            html += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
+            html += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
+            html += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
+            html += "</table>";
+            var cancelledUsers = getCancelledUsers(appointment);
+            if (_superuser) {
+                html += "<hr/>";
+                if (cancelledUsers == "") {
+                    html += "Keine Absagen!";
+                } else {
+                    html += "Absagen: " + cancelledUsers;
+                }
+           }
+
+
             if (aptMsg != "") {
                 html += "<hr/>";
                 html += "<div class=\"info\" style=\"color:blue\">" + aptMsg + "</div>";
             }
             html += "<hr/>";
-            var cancelled = isCancelled(appointment);
-            if (cancelled) {
-                html += "<button type='button' class='btn btn-success' style='width:100%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Termin nicht absagen</button>";
+            var suppressCancellation = appointment.attributes["suppressCancellation"];
+            if (suppressCancellation) {
+                html += "<div>Absagen nur in Direktabsprache mit der Chorleitung</div>";
             } else {
-                html += "<button type='button' class='btn btn-danger' style='width:100%' onclick='javascript:cancelAppointment("+appointment.id+")\'>Termin absagen</button>";
+                var cancelled = isCancelled(appointment);
+                if (cancelled) {
+                    html += "<button type='button' class='btn btn-success' style='width:100%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Termin nicht absagen</button>";
+                } else {
+                    html += "<button type='button' class='btn btn-danger' style='width:100%' onclick='javascript:cancelAppointment("+appointment.id+")\'>Termin absagen</button>";
+                }
             }
 
             html += " </div>";
@@ -213,18 +236,31 @@
                     if (appointment==upcomingAppointment) {
                         var cancelledUsers = getCancelledUsers(appointment);
                         btnClass = cancelled ? "btn btn-outline-warning" : "btn btn-warning";
+                        var leitung = (_superuser ? " (Leitung)" : "");
+                        console.log("su: " + _superuser + ", leitung: " + leitung);
                         var msg = "<h2>Probenplaner</h2><br/>";
-                        msg += "<h4>" + _userName + "</h4><br/>";
-                        msg += "Nächster Termin: " + datestrvis + "<br/>";
-                        if (cancelledUsers == "") {
-                            msg += "Keine Absagen!<br/>";
-                        } else {
-                            msg += "Absagen: " + cancelledUsers + "<br/>";
+                        msg += "<h4>" + _userName + leitung + "</h4><br/>";
+                        msg += "Nächster Termin:<br/>";
+                        msg += "<table>";
+                        msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
+                        msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
+                        msg += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
+                        msg += "</table>";
+                        if (_superuser) {
+                            msg += "<hr/>";
+                            if (cancelledUsers == "") {
+                                msg += "Keine Absagen!";
+                            } else {
+                                msg += "Absagen: " + cancelledUsers;
+                            }
                         }
+                        msg += "<br/>";
                         var aptMsg = appointment.attributes["message"];
                         if (aptMsg != "") {
-                            msg += "<br/><dev style=\"color:blue\">" + aptMsg + "<br/><br/>";
+                            msg += "<hr/><dev style=\"color:blue\">" + aptMsg;
+                            msg += "<br/>";
                         }
+                        msg += "<br/>";
                         document.getElementById("message").innerHTML=msg;
 
                     }
@@ -244,8 +280,11 @@
 
             if (command==="setData") {
                 _data = jo["data"];
+                var directorArray = _data.attributes["director"].split(",");
+                for (var i=0; i<directorArray.length; i++) { directorArray[i]=directorArray[i].trim();}
                 _orig = JSON.parse(JSON.stringify(_data));
                 addParents(_data, _data["id"]);
+                _superuser = (directorArray.includes(_userId));
                 showTimeline();
 
             } else if (command==="setModel") {

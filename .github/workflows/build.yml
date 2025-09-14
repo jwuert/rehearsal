@@ -32,15 +32,15 @@ jobs:
       env:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ secrets.GH_PACKA_GES_TOKEN }}
+        
     - name: Deploy WAR via SCP
       uses: appleboy/scp-action@v0.1.7
       with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "build/libs/rehearsal.war"
-        target: "/opt/apache-tomee-webprofile-10.1.1/webapps/"
-
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "build/libs/rehearsal.war"
+          target: "/opt/software/rehearsal"
         
   dependency-submission:
 

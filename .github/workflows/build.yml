@@ -40,6 +40,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "build/libs/rehearsal.war"
         target: "/opt/apache-tomee-webprofile-10.1.1/webapps/"
+        debug: true
 
         
   dependency-submission:

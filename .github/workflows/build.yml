@@ -32,6 +32,12 @@ jobs:
       env:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ secrets.GH_PACKA_GES_TOKEN }}
+
+    - name: Debug secrets
+      run: |
+        echo "SERVER_HOST=${{ secrets.SERVER_HOST }}"
+        echo "SERVER_USER=${{ secrets.SERVER_USER }}"
+        echo "Key length: $(echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -c)"
         
     - name: Deploy WAR via SCP
       uses: appleboy/scp-action@v0.1.7
@@ -41,6 +47,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "build/libs/rehearsal.war"
           target: "/opt/software/rehearsal"
+          
     - name: Copy Remote
       uses: appleboy/ssh-action@v0.1.7
       with:

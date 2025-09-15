@@ -41,6 +41,15 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "build/libs/rehearsal.war"
           target: "/opt/software/rehearsal"
+    - name: Copy Remote
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          sudo cp /opt/software/rehearsal/rehearsal.war /opt/apache-tomee-webprofile-10.1.1/webapps/
+          sudo chown tomee:tomee /opt/apache-tomee-webprofile-10.1.1/webapps/rehearsal.war
         
   dependency-submission:
 

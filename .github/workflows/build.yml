@@ -48,7 +48,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          sudo cp /opt/software/rehearsal/rehearsal.war /opt/apache-tomee-webprofile-10.1.1/webapps/
+          sudo cp /opt/software/rehearsal/build/libs/rehearsal.war /opt/apache-tomee-webprofile-10.1.1/webapps/
           sudo chown tomee:tomee /opt/apache-tomee-webprofile-10.1.1/webapps/rehearsal.war
         
   dependency-submission:

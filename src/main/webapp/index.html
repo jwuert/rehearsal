@@ -234,8 +234,11 @@
                         var cancelledUsers = getCancelledUsers(appointment);
                         btnClass = cancelled ? "btn btn-outline-warning" : "btn btn-warning";
                         var leitung = (_superuser ? " (Leitung)" : "");
-                        var msg = "<h2>Probenplaner</h2><br/>";
-                        msg += "<h4>" + _userName + leitung + "</h4><br/>";
+                        var msg = "<h2>Probenplaner</h2>";
+                        msg += "<div class=\"p-1\">";
+                        msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html\")'>Zur Listenansicht</button>";
+                        msg += "</div>";
+                        msg += "<h6 style='padding-top:8px;padding-bottom:8px;text-align:center;width:100%'>" + _userName + leitung + "</h6>";
                         msg += "Nächster Termin:<br/>";
                         msg += "<table>";
                         msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
@@ -250,13 +253,12 @@
                                 msg += "Absagen: " + cancelledUsers;
                             }
                         }
-                        msg += "<br/>";
+                        msg += "<hr/>";
                         var aptMsg = appointment.attributes["message"];
                         if (aptMsg != "") {
-                            msg += "<hr/><dev style=\"color:blue\">" + aptMsg;
-                            msg += "<br/>";
+                            msg += "<dev style='color:blue'>" + aptMsg;
+                            msg += "<hr/>";
                         }
-                        msg += "<br/>";
                         document.getElementById("message").innerHTML=msg;
 
                     }
@@ -264,10 +266,6 @@
                     html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">" + datestrvis + "</button><br/>";
                     html += "</div>";
                 }
-                html += "<br/>";
-                html += "<div class=\"p-1\">";
-                html += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html\")'>Zur Übersicht</button>";
-                html += "</div>";
                 html += "<br/>";
                 document.getElementById("timeline").innerHTML=html;
         }

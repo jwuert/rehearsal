@@ -222,9 +222,12 @@
                 var items = meta["items"];
 
                 var leitung = (_superuser ? " (Leitung)" : "");
-                var msg = "<h2>Übersicht</h2><br/>";
-                msg += "<h4>" + _userName + leitung + "</h4>";
-                msg += "<br/>";
+                var msg = "<h2>Listenansicht</h2>";
+                msg += "<div class=\"p-1\">";
+                msg += "<button type='button' class='btn btn-dark' onclick='javascipt:location.replace(\"index.html\")'>Zum Probenplaner</button>";
+                msg += "</div>";
+
+                msg += "<h6 style='padding-top:18px;padding-bottom:18px;text-align:left;width:100%'>" + _userName + leitung + "</h6>";
                 document.getElementById("message").innerHTML=msg;
 
                 var html = "<table class='table'>";
@@ -280,12 +283,13 @@
                     if (_superuser) {
                         html += "<td>" + cancelledUsers + "</td>";
                     }
-                    html += "<td>" + (appointment.attributes["info"]?appointment.attributes["info"]:"") + "</td>";
+                    html += "<td style='color:blue'>" + (appointment.attributes["message"]?appointment.attributes["message"]:"") + "</td>";
                     html += "</tr>";
 
                 }
-                html += "</tbody></table><br/>";
+                html += "</tbody></table>";
                 html += "<button type='button' class='btn btn-dark' onclick='javascipt:location.replace(\"index.html\")'>Zum Probenplaner</button>";
+                html += "<br/>";
                 html += "<br/>";
                 document.getElementById("timeline").innerHTML=html;
         }

@@ -259,7 +259,8 @@
                     var datestrvis = dateDay + "." + dateMonth + "." + dateYear;
 
                     var d = new Date(datestr);
-                    var today = new Date();
+                    var timestamp = new Date().getTime();
+                    var today = new Date(timestamp - (timestamp % 86400000));
                     var outdated = false;
                     var active = false;
 

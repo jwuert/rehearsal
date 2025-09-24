@@ -2,7 +2,7 @@
     <!-- MAKE reloadable="false" for production!!! -->
     <!-- Use DataSourceRealm with a JNDI DataSource -->
     <Realm className="org.apache.catalina.realm.DataSourceRealm"
-           dataSourceName="jdbc/rehearsal"
+           dataSourceName="jdbc/generic-dsNonJta"
            userTable="USER"
            userNameCol="USERNAME"
            userCredCol="PASSWORD"

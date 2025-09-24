@@ -5,6 +5,7 @@
     <link rel="icon" href="/rehearsal/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="sport/css/style.css">
     <link rel="stylesheet" type="text/css" href="sport/css/bootstrap.min.css">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <script type="text/javascript" src="sport/lib/jquery-3.5.1.slim.min.js"></script>
@@ -15,6 +16,10 @@
 
         var rootName = "Schubert";
         var rootId = 1;
+
+        const params = new URLSearchParams(window.location.search);
+        const _login = params.get("login");
+        console.log(_login);
 
         var upcomingAppointment = "";
         var _userName = "";
@@ -34,7 +39,7 @@
         function initWS() {
             console.log("Running project: " + getProjectId());
             // var wsUri = "ws://" + window.location.hostname + ":" + window.location.port + "/" + getProjectId() + "/socket";
-            const wsUri = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.hostname + ":" + window.location.port + "/" + getProjectId() + "/socket";
+            const wsUri = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.hostname + ":" + window.location.port + "/" + getProjectId() + "/socket" + "?login="+_login;
 
             console.log("connecting to: " + wsUri);
             ws = new WebSocket(wsUri);
@@ -50,7 +55,10 @@
                 ws = null;
                 document.getElementById("message").innerHTML="Tschöö!";
                 document.getElementById("timeline").innerHTML="";
-                document.getElementById("dialog").innerHTML="";
+                setTimeout(function() {
+                    document.getElementById("dialog").innerHTML="";
+                    document.getElementById("dialog").style.display='none';
+                 }, 5000);
             }
             if (ws) {
                 setTimeout(function() {
@@ -131,6 +139,23 @@
             }
 
             html += " </div>";
+            html += " <div class='modal-footer'>";
+            html += "  <button id='okBtn' type='button' class='btn btn-dark' onclick='javascript:hideDialog()\'>Zurück</button>";
+            html += " </div>";
+            html += "</div>";
+
+            document.getElementById("dialog").innerHTML=html;
+            document.getElementById("dialog").style.display='block';
+        }
+
+        function showInfo(header, message) {
+            var html = "<div class='modal-content'>";
+            html += " <div class='modal-header'>";
+            html += "  <h4 class='modal-title' align='center' style='width:100%;'>" + header + "</h4>";
+		    html += " </div>";
+		    html += " <div class='modal-body '>";
+		    html += "  " + message;
+		    html += " </div>";
             html += " <div class='modal-footer'>";
             html += "  <button id='okBtn' type='button' class='btn btn-dark' onclick='javascript:hideDialog()\'>Zurück</button>";
             html += " </div>";
@@ -236,7 +261,7 @@
                         var leitung = (_superuser ? " (Leitung)" : "");
                         var msg = "<h2>Probenplaner</h2>";
                         msg += "<div class=\"p-1\">";
-                        msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html\")'>Zur Listenansicht</button>";
+                        msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html?login="+_login+"\")'>Zur Listenansicht</button>";
                         msg += "</div>";
                         msg += "<h6 style='padding-top:8px;padding-bottom:8px;text-align:center;width:100%'>" + _userName + leitung + "</h6>";
                         msg += "Nächster Termin:<br/>";
@@ -283,12 +308,16 @@
                 addParents(_data, _data["id"]);
                 _superuser = (directorArray.includes(_userId));
                 showTimeline();
-
+            } else if (command==="info") {
+                var header = jo["header"];
+                var message = jo["message"];
+                showInfo(header, message);
             } else if (command==="setModel") {
                 _model = jo["data"];
                 _appName = jo["appName"];
                 _userMap = jo["userMap"];
             } else if (command==="setUserId") {
+                console.log("#### setUserId");
                 _userId = jo["userId"];
                 _userName = _userMap[_userId];
             } else if (command==="setDocumentList") {

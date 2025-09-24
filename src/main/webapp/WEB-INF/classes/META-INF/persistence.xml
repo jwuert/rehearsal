@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             version="3.0"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+                                 https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+
+    <persistence-unit name="sportpu" transaction-type="JTA">
+        <jta-data-source>jdbc/generic-dsNonJta</jta-data-source>
+        <properties>
+            <property name="openjpa.RuntimeUnenhancedClasses" value="unsupported"/>
+            <property name="openjpa.DynamicEnhancementAgent" value="false"/>
+            <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
+            <property name="openjpa.Log" value="File=stdout, SQL=ERROR"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>

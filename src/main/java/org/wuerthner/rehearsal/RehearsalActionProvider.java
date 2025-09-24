@@ -135,8 +135,8 @@ public class RehearsalActionProvider extends org.wuerthner.rehearsalmodel.action
 		actionList.add(new Separator());
 		
 		actionList.add(aboutAction);
-		actionList.add(generateModelReportAction);
-		actionList.add(generateReportAction);
+		//actionList.add(generateModelReportAction);
+		//actionList.add(generateReportAction);
 		actionList.add(logoutAction);
 		return actionList;
 	}

@@ -308,7 +308,7 @@
                         }
                         html += "<div class=\"p-1\">";
                         html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">";
-                        html += "<div>" + weekday + ". " + datestrvis + " - " + appointment.attributes["time"];
+                        html += "<div>" + weekday + ". " + datestrvis;
                         if (cancelled) {
                             html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
                         } else {
@@ -316,6 +316,7 @@
                         }
                         html += "</div>";
                         html += "<div style='font-size:small'>" + _items[appointment.attributes["type"]];
+                        html += " " + appointment.attributes["time"];
                         if (numberOfCancelledUsers>0) {
                             html += " (" + (numberOfCancelledUsers==1 ? "eine Absage" : numberOfCancelledUsers + " Absagen") + ")";
                         }

@@ -6,7 +6,10 @@
                                  https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
 
     <persistence-unit name="sportpu" transaction-type="JTA">
-        <jta-data-source>jdbc/generic-dsNonJta</jta-data-source>
+        <jta-data-source>jdbc/generic-ds</jta-data-source>
+        <class>org.wuerthner.sport.persistence.entity.GenericEntity</class>
+        <class>org.wuerthner.sport.persistence.entity.AttributeEntity</class>
+        <class>org.wuerthner.sport.persistence.entity.ContextEntity</class>
         <properties>
             <property name="openjpa.RuntimeUnenhancedClasses" value="unsupported"/>
             <property name="openjpa.DynamicEnhancementAgent" value="false"/>

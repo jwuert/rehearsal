@@ -19,7 +19,7 @@
 
         const params = new URLSearchParams(window.location.search);
         const _login = params.get("login");
-        console.log(_login);
+        const dayName = (date) => date.toLocaleDateString("de-DE", { weekday: "long" }).slice(0, 2);
 
         var upcomingAppointment = "";
         var _userName = "";
@@ -32,6 +32,7 @@
         var _orig = (reload ? JSON.parse(sessionStorage.getItem("orig")) : null );
         var _data = null;//(reload ? JSON.parse(sessionStorage.getItem("data")) : null );
         var _model = (reload ? JSON.parse(sessionStorage.getItem("model")) : null );
+        var _items = {};
 	    var _appName = "-";
 	    var documentMap = {};
 
@@ -85,13 +86,10 @@
         }
 
         function showDialog(id, datestrvis) {
-            var meta = _model["Appointment"]["attributes"]["type"];
-            var items = meta["items"];
-
             var appointment = getElement(_data, id);
             var aptMsg = appointment.attributes["message"];
             var aptType = appointment.attributes["type"];
-            var typeLabel = items[aptType];
+            var typeLabel = _items[aptType];
             var color = "";
             var html = "<div class='modal-content'>";
 		    if (appointment.id == upcomingAppointment.id) {
@@ -127,7 +125,7 @@
             }
             html += "<hr/>";
             var suppressCancellation = appointment.attributes["suppressCancellation"];
-            if (suppressCancellation) {
+            if (suppressCancellation && suppressCancellation!="false") {
                 html += "<div>Absagen nur in Direktabsprache mit der Chorleitung</div>";
             } else {
                 var cancelled = isCancelled(appointment);
@@ -204,6 +202,20 @@
             return cancelledUsers;
         }
 
+        function getMyCancellations() {
+            var count = 0;
+            var list = lookupElement(_data, "Appointment");
+            for (var i=0; i<list.length; i++) {
+                var appointment = list[i];
+                for (var j=0; j<appointment.children.length; j++) {
+                    if (appointment.children[j].type==="Cancellation" && appointment.children[j].attributes["userid"]===_userId) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
         function cancelAppointment(id) {
             var appointment = getElement(_data, id);
             var attributes = {};
@@ -244,6 +256,7 @@
                     var datestrvis = dateDay + "." + dateMonth + "." + dateYear;
 
                     var d = new Date(datestr);
+                    var weekday = dayName(d);
                     var timestamp = new Date().getTime();
                     var today = new Date(timestamp - (timestamp % 86400000));
                     var outdated = false;
@@ -252,44 +265,64 @@
                     } else if (d < today) {
                         outdated = true;
                     }
-                    var cancelled = isCancelled(appointment);
-
-                    var btnClass = cancelled ? "btn btn-outline-primary" : "btn btn-primary";
-                    if (appointment==upcomingAppointment) {
+                    if (!outdated) {
+                        var cancelled = isCancelled(appointment);
                         var cancelledUsers = getCancelledUsers(appointment);
-                        btnClass = cancelled ? "btn btn-outline-warning" : "btn btn-warning";
-                        var leitung = (_superuser ? " (Leitung)" : "");
-                        var msg = "<h2>Probenplaner</h2>";
-                        msg += "<div class=\"p-1\">";
-                        msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html?login="+_login+"\")'>Zur Listenansicht</button>";
-                        msg += "</div>";
-                        msg += "<h6 style='padding-top:8px;padding-bottom:8px;text-align:center;width:100%'>" + _userName + leitung + "</h6>";
-                        msg += "Nächster Termin:<br/>";
-                        msg += "<table>";
-                        msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
-                        msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
-                        msg += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
-                        msg += "</table>";
-                        if (_superuser) {
-                            msg += "<hr/>";
-                            if (cancelledUsers == "") {
-                                msg += "Keine Absagen!";
-                            } else {
-                                msg += "Absagen: " + cancelledUsers;
+                        var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
+                        // var btnClass = cancelled ? "btn btn-outline-primary" : "btn btn-primary";
+                        var btnClass = "btn btn-primary";
+                        if (appointment==upcomingAppointment) {
+                            btnClass = cancelled ? "btn btn-outline-warning" : "btn btn-warning";
+                            var leitung = (_superuser ? " (Leitung)" : "");
+                            var msg = "<h2>Probenplaner</h2>";
+                            msg += "<div class=\"p-1\">";
+                            msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html?login="+_login+"\")'>Zur Listenansicht</button>";
+                            msg += "</div>";
+                            msg += "<h6 style='padding-top:8px;padding-bottom:8px;text-align:center;width:100%'>" + _userName + leitung + "</h6>";
+                            msg += "Nächster Termin:<br/>";
+                            msg += "<table>";
+                            msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
+                            msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
+                            msg += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
+                            msg += "</table>";
+                            if (_superuser) {
+                                msg += "<hr/>";
+                                if (cancelledUsers == "") {
+                                    msg += "Keine Absagen!";
+                                } else {
+                                    msg += "Absagen: " + cancelledUsers;
+                                }
                             }
-                        }
-                        msg += "<hr/>";
-                        var aptMsg = appointment.attributes["message"];
-                        if (aptMsg != "") {
-                            msg += "<dev style='color:blue'>" + aptMsg;
                             msg += "<hr/>";
+                            var aptMsg = appointment.attributes["message"];
+                            if (aptMsg != "") {
+                                msg += "<dev style='color:blue'>" + aptMsg + "</div>";
+                                msg += "<hr/>";
+                            }
+                            var myCancellations = getMyCancellations();
+                            if (myCancellations > 0) {
+                                msg += "<dev style='color:red'>Ich habe " + (myCancellations>1 ? myCancellations + " Proben":"eine Probe") + " abgesagt</div>";
+                                msg += "<hr/>";
+                            }
+                            document.getElementById("message").innerHTML=msg;
                         }
-                        document.getElementById("message").innerHTML=msg;
-
+                        html += "<div class=\"p-1\">";
+                        html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">";
+                        html += "<div>" + weekday + ". " + datestrvis + " - " + appointment.attributes["time"];
+                        if (cancelled) {
+                            html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
+                        } else {
+                            html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                        }
+                        html += "</div>";
+                        html += "<div style='font-size:small'>" + _items[appointment.attributes["type"]];
+                        if (numberOfCancelledUsers>0) {
+                            html += " (" + (numberOfCancelledUsers==1 ? "eine Absage" : numberOfCancelledUsers + " Absagen") + ")";
+                        }
+                        html += "</div>";
+                        html += "</button><br/>";
+                        html += "</div>";
                     }
-                    html += "<div class=\"p-1\">";
-                    html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">" + datestrvis + "</button><br/>";
-                    html += "</div>";
                 }
                 html += "<br/>";
                 document.getElementById("timeline").innerHTML=html;
@@ -316,8 +349,8 @@
                 _model = jo["data"];
                 _appName = jo["appName"];
                 _userMap = jo["userMap"];
+                _items = _model["Appointment"]["attributes"]["type"]["items"];
             } else if (command==="setUserId") {
-                console.log("#### setUserId");
                 _userId = jo["userId"];
                 _userName = _userMap[_userId];
             } else if (command==="setDocumentList") {

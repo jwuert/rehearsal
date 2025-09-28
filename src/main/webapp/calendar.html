@@ -127,7 +127,7 @@
             }
             html += "<hr/>";
             var suppressCancellation = appointment.attributes["suppressCancellation"];
-            if (suppressCancellation) {
+            if (suppressCancellation && suppressCancellation!="false") {
                 html += "<div>Absagen nur in Direktabsprache mit der Chorleitung</div>";
             } else {
                 var cancelled = isCancelled(appointment);
@@ -260,6 +260,7 @@
                 html += "<tr>";
                 html += "<th scope='col'>#</th>";
                 html += "<th scope='col'>Termin</th>";
+                html += "<th scope='col'>Anwesend</th>";
                 html += "<th scope='col'>Datum</th>";
                 html += "<th scope='col'>Uhrzeit</th>";
                 html += "<th scope='col'>Ort</th>";
@@ -303,6 +304,11 @@
                     html += "<tr " + (active?"class='table-warning'":"") + " >";
                     html += "<th scope='row'>" + (i+1) + "</th>";
                     html += "<td>" + items[appointment.attributes["type"]] + "</td>";
+                    if (cancelled) {
+                            html += "<td style='color:red;'>&nbsp;&nbsp;&#10008;</d>";
+                        } else {
+                            html += "<td style='color:green;'>&nbsp;&nbsp;&#10004;</d>";
+                        }
                     html += "<td>" + datestrvis + "</td>";
                     html += "<td>" + appointment.attributes["time"] + "</td>";
                     html += "<td>" + location + "</td>";

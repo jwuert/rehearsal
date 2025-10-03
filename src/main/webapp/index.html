@@ -56,6 +56,8 @@
                 ws = null;
                 document.getElementById("message").innerHTML="Tschöö!";
                 document.getElementById("timeline").innerHTML="";
+                document.getElementById("dialog").innerHTML="";
+                document.getElementById("dialog").style.display='none';
                 setTimeout(function() {
                     document.getElementById("dialog").innerHTML="";
                     document.getElementById("dialog").style.display='none';
@@ -116,6 +118,29 @@
                 } else {
                     html += "Absagen: " + cancelledUsers;
                 }
+           }
+           {
+                var workMap = getAcceptedUsersInMyVoice(appointment);
+                var workList = Object.keys(workMap).sort();
+                html += "<hr/>";
+                html += "Anwesenheit:<br/>";
+                html += "<table style='font-size:small;width:100%'>";
+                html += "<tr style='color:grey'><td></td><td>Werk</td><td>#</td><td>Grp</td></tr>";
+                for (var w=0; w<workList.length; w++) {
+                    var work = workList[w];
+                    var voiceMap = workMap[work];
+                    for (var voice in voiceMap) {
+                        var singersList = voiceMap[voice];
+                        html += "<tr>";
+                        html += "<td>&#8226;&nbsp;</td>";
+                        html += "<td style='padding:1px;padding-left:5px'>" + work + "</td>";
+                        html += "<td style='padding:1px;padding-left:5px'>" + singersList.length + "</td>";
+                        html += "<td style='padding:1px;padding-left:5px'>" + voice + "</td>";
+                        html += "</tr>";
+                        console.log("* " + work + " ("+voice+"): " + singersList.length);
+                    }
+                }
+                html += "</table>";
            }
 
 
@@ -200,6 +225,63 @@
                 sep = ", ";
             }
             return cancelledUsers;
+        }
+
+        function getAcceptedUsersPerVoice(appointment) {
+            var workMap = {};
+            var cancellationList = [];
+            for (var i=0; i<appointment.children.length; i++) {
+                cancellationList.push(appointment.children[i].attributes["userid"]);
+            }
+            var workList = lookupElement(_data,"Work");
+            for (var i=0; i<workList.length; i++) {
+                var work = workList[i];
+                var voiceMap = {};
+                for (var v=0; v<work.children.length; v++) {
+                    var voice = work.children[v];
+                    var singersList = voice.attributes["singers"].split(",");
+                    voiceMap[voice.attributes["shortid"]] = [];
+                    for (var s=0; s<singersList.length; s++) {
+                        if (!cancellationList.includes(singersList[s])) {
+                            var name = _userMap[singersList[s]];
+                            if (!name || name=="") { name = singersList[s]; }
+                            voiceMap[voice.attributes["shortid"]].push(name);
+                        }
+                    }
+                }
+                workMap[work.attributes["id"]] = voiceMap;
+            }
+            return workMap;
+        }
+
+        function getAcceptedUsersInMyVoice(appointment) {
+            var workMap = {};
+            var cancellationList = [];
+            for (var i=0; i<appointment.children.length; i++) {
+                cancellationList.push(appointment.children[i].attributes["userid"]);
+            }
+            var workList = lookupElement(_data,"Work");
+            for (var i=0; i<workList.length; i++) {
+                var work = workList[i];
+                var voiceMap = {};
+                for (var v=0; v<work.children.length; v++) {
+                    var voice = work.children[v];
+                    var singersList = voice.attributes["singers"].split(",");
+                    if (singersList.includes(_userId)) {
+                        voiceMap[voice.attributes["shortid"]] = [];
+                        for (var s=0; s<singersList.length; s++) {
+                            if (!cancellationList.includes(singersList[s])) {
+                                var name = _userMap[singersList[s]];
+                                console.log(_userMap[singersList[s]]);
+                                if (!name || name=="") { name = singersList[s]; }
+                                voiceMap[voice.attributes["shortid"]].push(name);
+                            }
+                        }
+                    }
+                }
+                workMap[work.attributes["id"]] = voiceMap;
+            }
+            return workMap;
         }
 
         function getMyCancellations() {
@@ -341,6 +423,7 @@
                 addParents(_data, _data["id"]);
                 _superuser = (directorArray.includes(_userId));
                 showTimeline();
+                hideDialog();
             } else if (command==="info") {
                 var header = jo["header"];
                 var message = jo["message"];

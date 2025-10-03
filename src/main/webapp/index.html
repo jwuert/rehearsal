@@ -269,10 +269,9 @@
                         var cancelled = isCancelled(appointment);
                         var cancelledUsers = getCancelledUsers(appointment);
                         var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
-                        // var btnClass = cancelled ? "btn btn-outline-primary" : "btn btn-primary";
                         var btnClass = "btn btn-primary";
                         if (appointment==upcomingAppointment) {
-                            btnClass = cancelled ? "btn btn-outline-warning" : "btn btn-warning";
+                            btnClass = "btn btn-warning";
                             var leitung = (_superuser ? " (Leitung)" : "");
                             var msg = "<h2>Probenplaner</h2>";
                             msg += "<div class=\"p-1\">";

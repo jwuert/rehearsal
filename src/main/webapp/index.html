@@ -56,12 +56,10 @@
                 ws = null;
                 document.getElementById("message").innerHTML="Tschöö!";
                 document.getElementById("timeline").innerHTML="";
-                document.getElementById("dialog").innerHTML="";
-                document.getElementById("dialog").style.display='none';
                 setTimeout(function() {
                     document.getElementById("dialog").innerHTML="";
                     document.getElementById("dialog").style.display='none';
-                 }, 5000);
+                 }, 3000);
             }
             if (ws) {
                 setTimeout(function() {
@@ -90,6 +88,7 @@
         function showDialog(id, datestrvis) {
             var appointment = getElement(_data, id);
             var aptMsg = appointment.attributes["message"];
+            var suppressCancellation = getSuppressCancellation(appointment);
             var aptType = appointment.attributes["type"];
             var typeLabel = _items[aptType];
             var color = "";
@@ -122,25 +121,27 @@
            {
                 var workMap = getAcceptedUsersInMyVoice(appointment);
                 var workList = Object.keys(workMap).sort();
-                html += "<hr/>";
-                html += "Anwesenheit:<br/>";
-                html += "<table style='font-size:small;width:100%'>";
-                html += "<tr style='color:grey'><td></td><td>Werk</td><td>#</td><td>Grp</td></tr>";
-                for (var w=0; w<workList.length; w++) {
-                    var work = workList[w];
-                    var voiceMap = workMap[work];
-                    for (var voice in voiceMap) {
-                        var singersList = voiceMap[voice];
-                        html += "<tr>";
-                        html += "<td>&#8226;&nbsp;</td>";
-                        html += "<td style='padding:1px;padding-left:5px'>" + work + "</td>";
-                        html += "<td style='padding:1px;padding-left:5px'>" + singersList.length + "</td>";
-                        html += "<td style='padding:1px;padding-left:5px'>" + voice + "</td>";
-                        html += "</tr>";
-                        console.log("* " + work + " ("+voice+"): " + singersList.length);
+                if ((!suppressCancellation) || _superuser) {
+                    html += "<hr/>";
+                    html += "Anwesenheit:<br/>";
+                    html += "<table style='font-size:small;width:100%'>";
+                    html += "<tr style='color:grey'><td></td><td>Werk</td><td>#</td><td>Grp</td></tr>";
+                    for (var w=0; w<workList.length; w++) {
+                        var work = workList[w];
+                        var voiceMap = workMap[work];
+                        for (var voice in voiceMap) {
+                            var singersList = voiceMap[voice];
+                            html += "<tr>";
+                            html += "<td>&#8226;&nbsp;</td>";
+                            html += "<td style='padding:1px;padding-left:5px'>" + work + "</td>";
+                            html += "<td style='padding:1px;padding-left:5px'>" + singersList.length + "</td>";
+                            html += "<td style='padding:1px;padding-left:5px'>" + voice + "</td>";
+                            html += "</tr>";
+                            console.log("* " + work + " ("+voice+"): " + singersList.length);
+                        }
                     }
+                    html += "</table>";
                 }
-                html += "</table>";
            }
 
 
@@ -149,8 +150,7 @@
                 html += "<div class=\"info\" style=\"color:blue\">" + aptMsg + "</div>";
             }
             html += "<hr/>";
-            var suppressCancellation = appointment.attributes["suppressCancellation"];
-            if (suppressCancellation && suppressCancellation!="false") {
+            if (suppressCancellation) {
                 html += "<div>Absagen nur in Direktabsprache mit der Chorleitung</div>";
             } else {
                 var cancelled = isCancelled(appointment);
@@ -330,6 +330,7 @@
                 for (var i=0; i<list.length; i++) {
                     var appointment = list[i];
                     var aptId = appointment.id;
+                    var suppressCancellation = getSuppressCancellation(appointment);
                     var dt = appointment.attributes["date"];
                     var dateYear = dt.substring(0,4);
                     var dateMonth = dt.substring(5,7);
@@ -399,7 +400,9 @@
                         html += "<div style='font-size:small'>" + _items[appointment.attributes["type"]];
                         html += " " + appointment.attributes["time"];
                         if (numberOfCancelledUsers>0) {
-                            html += " (" + (numberOfCancelledUsers==1 ? "eine Absage" : numberOfCancelledUsers + " Absagen") + ")";
+                            if ((!suppressCancellation) || _superuser) {
+                                html += " (" + (numberOfCancelledUsers==1 ? "eine Absage" : numberOfCancelledUsers + " Absagen") + ")";
+                            }
                         }
                         html += "</div>";
                         html += "</button><br/>";
@@ -408,6 +411,15 @@
                 }
                 html += "<br/>";
                 document.getElementById("timeline").innerHTML=html;
+        }
+
+        function getSuppressCancellation(appointment) {
+            var result = false;
+            var sc = appointment.attributes["suppressCancellation"];
+            if (sc && sc==="true") {
+                result = true;
+            }
+            return result;
         }
 
         function handleMessage(ws, data) {

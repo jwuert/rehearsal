@@ -7,29 +7,7 @@ import java.util.Optional;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
-import org.wuerthner.sport.action.AboutWebActionInterface;
-import org.wuerthner.sport.action.ClearWebActionInterface;
-import org.wuerthner.sport.action.CollapseNavigationWebActionInterface;
-import org.wuerthner.sport.action.CompareWebActionInterface;
-import org.wuerthner.sport.action.CopyWebActionInterface;
-import org.wuerthner.sport.action.CutWebActionInterface;
-import org.wuerthner.sport.action.DeleteElementWebActionInterface;
-import org.wuerthner.sport.action.DumpWebActionInterface;
-import org.wuerthner.sport.action.ExportWebActionInterface;
-import org.wuerthner.sport.action.GenerateModelReportWebActionInterface;
-import org.wuerthner.sport.action.GenerateReportWebActionInterface;
-import org.wuerthner.sport.action.ImportWebActionInterface;
-import org.wuerthner.sport.action.JournalWebActionInterface;
-import org.wuerthner.sport.action.LogoutWebActionInterface;
-import org.wuerthner.sport.action.NewElementWebActionInterface;
-import org.wuerthner.sport.action.NewRootElementWebActionInterface;
-import org.wuerthner.sport.action.OpenDocumentWebActionInterface;
-import org.wuerthner.sport.action.PasteWebActionInterface;
-import org.wuerthner.sport.action.RedoWebActionInterface;
-import org.wuerthner.sport.action.SaveDocumentWebActionInterface;
-import org.wuerthner.sport.action.Separator;
-import org.wuerthner.sport.action.UndoWebActionInterface;
-import org.wuerthner.sport.action.ValidateWebActionInterface;
+import org.wuerthner.sport.action.*;
 import org.wuerthner.sport.api.Action;
 import org.wuerthner.sport.api.ActionProvider;
 
@@ -66,7 +44,7 @@ public class RehearsalActionProvider extends org.wuerthner.rehearsalmodel.action
 	private NewRootElementWebActionInterface newRootElementAction;
 	
 	@Inject
-	private LogoutWebActionInterface logoutAction;
+	private LogoutAllWebActionInterface logoutAction;
 	
 	@Inject
 	private NewElementWebActionInterface newElementAction;
@@ -130,11 +108,11 @@ public class RehearsalActionProvider extends org.wuerthner.rehearsalmodel.action
 		actionList.add(validateAction);
 		actionList.add(compareAction);
 		actionList.add(journalAction);
-		actionList.add(dumpAction);
+		// actionList.add(dumpAction);
 		
 		actionList.add(new Separator());
 		
-		actionList.add(aboutAction);
+		// actionList.add(aboutAction);
 		//actionList.add(generateModelReportAction);
 		//actionList.add(generateReportAction);
 		actionList.add(logoutAction);

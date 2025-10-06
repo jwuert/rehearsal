@@ -448,6 +448,23 @@
             } else if (command==="setUserId") {
                 _userId = jo["userId"];
                 _userName = _userMap[_userId];
+                var userIdSet = jo["userIdSet"];
+                var maintenance = false;
+                if (_data) {
+                    var directorArray = _data.attributes["director"].split(",");
+                    for (var i=0; i<directorArray.length; i++) { directorArray[i]=directorArray[i].trim();}
+                    for (var i=0; i<userIdSet.length; i++) {
+                        if (directorArray.includes(userIdSet[i])) {
+                            maintenance = true;
+                            break;
+                        }
+                    }
+                }
+                console.log("maintenance: " + maintenance);
+                if (maintenance) {
+                    showInfo("Wartungsarbeiten", "Bitte später erneut versuchen!");
+                    ws.close();
+                }
             } else if (command==="setDocumentList") {
                 var documentReferenceMap = jo["data"];
                 for (var name in documentReferenceMap) {

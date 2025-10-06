@@ -137,7 +137,6 @@
                             html += "<td style='padding:1px;padding-left:5px'>" + singersList.length + "</td>";
                             html += "<td style='padding:1px;padding-left:5px'>" + voice + "</td>";
                             html += "</tr>";
-                            console.log("* " + work + " ("+voice+"): " + singersList.length);
                         }
                     }
                     html += "</table>";
@@ -272,7 +271,6 @@
                         for (var s=0; s<singersList.length; s++) {
                             if (!cancellationList.includes(singersList[s])) {
                                 var name = _userMap[singersList[s]];
-                                console.log(_userMap[singersList[s]]);
                                 if (!name || name=="") { name = singersList[s]; }
                                 voiceMap[voice.attributes["shortid"]].push(name);
                             }

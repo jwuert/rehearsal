@@ -44,7 +44,7 @@ public class RehearsalActionProvider extends org.wuerthner.rehearsalmodel.action
 	private NewRootElementWebActionInterface newRootElementAction;
 	
 	@Inject
-	private LogoutAllWebActionInterface logoutAction;
+	private LogoutWebActionInterface logoutAction;
 	
 	@Inject
 	private NewElementWebActionInterface newElementAction;

@@ -446,20 +446,9 @@
             } else if (command==="setUserId") {
                 _userId = jo["userId"];
                 _userName = _userMap[_userId];
-                var userIdSet = jo["userIdSet"];
-                var maintenance = false;
-                if (_data) {
-                    var directorArray = _data.attributes["director"].split(",");
-                    for (var i=0; i<directorArray.length; i++) { directorArray[i]=directorArray[i].trim();}
-                    for (var i=0; i<userIdSet.length; i++) {
-                        if (directorArray.includes(userIdSet[i])) {
-                            maintenance = true;
-                            break;
-                        }
-                    }
-                }
+                var maintenance = jo["maintenance"];
                 console.log("maintenance: " + maintenance);
-                if (maintenance) {
+                if (maintenance.length>0) {
                     showInfo("Wartungsarbeiten", "Bitte später erneut versuchen!");
                     ws.close();
                 }

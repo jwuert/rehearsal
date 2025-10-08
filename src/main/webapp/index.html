@@ -448,7 +448,9 @@
                 _userName = _userMap[_userId];
                 var maintenance = jo["maintenance"];
                 console.log("maintenance: " + maintenance);
+                console.log("maintehance.length>0" + (maintenance.length>0));
                 if (maintenance.length>0) {
+                    console.log("Closing session due to maintenance: " + maintenance);
                     showInfo("Wartungsarbeiten", "Bitte später erneut versuchen!");
                     ws.close();
                 }

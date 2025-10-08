@@ -51,8 +51,9 @@
                 jo = JSON.parse(e.data);
                 handleMessage(ws, e.data);
             }
-            ws.onclose = function() {
+            ws.onclose = function(e) {
                 console.log("[WebSocket#onclose]\n");
+                console.log(e.code, e.reason);
                 ws = null;
                 document.getElementById("message").innerHTML="Tschöö!";
                 document.getElementById("timeline").innerHTML="";
@@ -448,7 +449,6 @@
                 _userName = _userMap[_userId];
                 var maintenance = jo["maintenance"];
                 console.log("maintenance: " + maintenance);
-                console.log("maintehance.length>0" + (maintenance.length>0));
                 if (maintenance.length>0) {
                     console.log("Closing session due to maintenance: " + maintenance);
                     showInfo("Wartungsarbeiten", "Bitte später erneut versuchen!");

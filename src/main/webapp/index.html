@@ -111,18 +111,35 @@
             html += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
             html += "</table>";
             var cancelledUsers = getCancelledUsers(appointment);
-            if (_superuser) {
+            var acceptedUsers = getAcceptedUsers(appointment);
+            var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
+            var numberOfAcceptedUsers = acceptedUsers==="" ? 0 : acceptedUsers.split(",").length;
+
+            if (appointment.attributes.allowAcceptance == "true") {
+                html += "<hr/>";
+                if (acceptedUsers == "") {
+                    html += "Keine Zusagen!";
+                } else {
+                    html += (_superuser ? "Zusagen: " + acceptedUsers : numberOfAcceptedUsers + " Zusagen");
+                }
                 html += "<hr/>";
                 if (cancelledUsers == "") {
                     html += "Keine Absagen!";
                 } else {
-                    html += "Absagen: " + cancelledUsers;
+                    html += (_superuser ? "Absagen: " + cancelledUsers : numberOfCancelledUsers + " Absagen");
                 }
-           }
-           {
-                var workMap = getAcceptedUsersInMyVoice(appointment);
-                var workList = Object.keys(workMap).sort();
+            } else {
+                if (_superuser) {
+                    html += "<hr/>";
+                    if (cancelledUsers == "") {
+                        html += "Keine Absagen!";
+                    } else {
+                        html += "Absagen: " + cancelledUsers;
+                    }
+                }
                 if ((!suppressCancellation) || _superuser) {
+                    var workMap = getAcceptedUsersInMyVoice(appointment);
+                    var workList = Object.keys(workMap).sort();
                     html += "<hr/>";
                     html += "Anwesenheit:<br/>";
                     html += "<table style='font-size:small;width:100%'>";
@@ -142,8 +159,7 @@
                     }
                     html += "</table>";
                 }
-           }
-
+            }
 
             if (aptMsg != "") {
                 html += "<hr/>";
@@ -154,10 +170,28 @@
                 html += "<div>Absagen nur in Direktabsprache mit der Chorleitung</div>";
             } else {
                 var cancelled = isCancelled(appointment);
-                if (cancelled) {
-                    html += "<button type='button' class='btn btn-success' style='width:100%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Termin nicht absagen</button>";
+                var accepted = isAccepted(appointment);
+                console.log("cancelled " + cancelled);
+                console.log("accepted " + accepted);
+                if (appointment.attributes.allowAcceptance=="true") {
+                    console.log("three choices");
+                    // THREE CHOICES
+                    if (!accepted) {
+                        html += "<button type='button' class='btn btn-success' style='width:50%' onclick='javascript:setCancellation("+appointment.id+",true)\'>Termin zusagen</button>";
+                    }
+                    if (!cancelled) {
+                        html += "<button type='button' class='btn btn-danger' style='width:50%' onclick='javascript:setCancellation("+appointment.id+",false)\'>Termin absagen</button>";
+                    }
+                    if (cancelled || accepted) {
+                        html += "<button type='button' class='btn btn-outline-dark' style='width:50%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Antwort widerrufen</button>";
+                    }
                 } else {
-                    html += "<button type='button' class='btn btn-danger' style='width:100%' onclick='javascript:cancelAppointment("+appointment.id+")\'>Termin absagen</button>";
+                    // TWO CHOICES
+                    if (cancelled) {
+                        html += "<button type='button' class='btn btn-success' style='width:100%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Termin nicht absagen</button>";
+                    } else {
+                        html += "<button type='button' class='btn btn-danger' style='width:100%' onclick='javascript:setCancellation("+appointment.id+",false)\'>Termin absagen</button>";
+                    }
                 }
             }
 
@@ -197,10 +231,25 @@
             for (var i=0; i<appointment.children.length; i++) {
                 var cancellation = appointment.children[i];
                 if (cancellation && cancellation.attributes.userid == _userId) {
-                    cancelled = true;
+                    if (!cancellation.attributes.acception || cancellation.attributes.acception == "" || cancellation.attributes.acception == "false") {
+                        cancelled = true;
+                    }
                 }
             }
             return cancelled;
+        }
+
+        function isAccepted(appointment) {
+            var accepted = false;
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                if (cancellation && cancellation.attributes.userid == _userId) {
+                    if (cancellation.attributes.acception == "true") {
+                        accepted = true;
+                    }
+                }
+            }
+            return accepted;
         }
 
         function getActiveUserCancellation(appointment) {
@@ -220,11 +269,30 @@
             for (var i=0; i<appointment.children.length; i++) {
                 var cancellation = appointment.children[i];
                 var name = _userMap[cancellation.attributes["userid"]];
-                if (!name || name=="") { name = cancellation.attributes["userid"]; }
-                cancelledUsers += sep+name;
-                sep = ", ";
+                var cancelled = (!cancellation.attributes.acception || cancellation.attributes.acception == "" || cancellation.attributes.acception == "false");
+                if (cancelled) {
+                    if (!name || name=="") { name = cancellation.attributes["userid"]; }
+                    cancelledUsers += sep+name;
+                    sep = ", ";
+                }
             }
             return cancelledUsers;
+        }
+
+        function getAcceptedUsers(appointment) {
+            var acceptedUsers = "";
+            var sep = "";
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                var name = _userMap[cancellation.attributes["userid"]];
+                var accepted = (cancellation.attributes.acception == "true");
+                if (accepted) {
+                    if (!name || name=="") { name = cancellation.attributes["userid"]; }
+                    acceptedUsers += sep+name;
+                    sep = ", ";
+                }
+            }
+            return acceptedUsers;
         }
 
         function getAcceptedUsersPerVoice(appointment) {
@@ -289,22 +357,43 @@
             for (var i=0; i<list.length; i++) {
                 var appointment = list[i];
                 for (var j=0; j<appointment.children.length; j++) {
-                    if (appointment.children[j].type==="Cancellation" && appointment.children[j].attributes["userid"]===_userId) {
-                        count++;
+                     if (appointment.children[j].type==="Cancellation") {
+                        var cancellation = appointment.children[j];
+                        if (cancellation.attributes["userid"]===_userId) {
+                            if (!cancellation.attributes.acception || cancellation.attributes.acception == "" || cancellation.attributes.acception == "false") {
+                                count++;
+                            }
+                        }
                     }
                 }
             }
             return count;
         }
 
-        function cancelAppointment(id) {
+        function setCancellation(id, acception) {
+            console.log("[setCancellation("+id+","+acception+")]");
             var appointment = getElement(_data, id);
-            var attributes = {};
-            attributes["userid"] = _userId;
-            var newElement = { id: _next_id, parentId: appointment.id, type: "Cancellation", order: 0, attributes: attributes, children: [] }
-            appointment.children.push(newElement);
-			newElement.parentId = appointment.id;
-
+            var cancellation;
+            for (var i=0; i<appointment.children.length; i++) {
+                var can = appointment.children[i];
+                if (can && can.attributes.userid == _userId) {
+                    cancellation = can;
+                }
+            }
+            console.log("cancellation: ");
+            console.log(cancellation);
+            if (cancellation) {
+                // existing cancellation
+                cancellation.attributes.acception = ""+acception;
+            } else {
+                // new cancellation
+                var attributes = {};
+                attributes["userid"] = _userId;
+                attributes["acception"] = ""+acception;
+                var newElement = { id: _next_id, parentId: appointment.id, type: "Cancellation", order: 0, attributes: attributes, children: [] }
+                appointment.children.push(newElement);
+                newElement.parentId = appointment.id;
+            }
             ws.send("{\"command\":\"save\", \"data\":" + JSON.stringify(_data) + ", \"selectedId\":" + appointment.id + "}");
             hideDialog();
         }
@@ -349,8 +438,11 @@
                     }
                     if (!outdated) {
                         var cancelled = isCancelled(appointment);
+                        var accepted = isAccepted(appointment);
                         var cancelledUsers = getCancelledUsers(appointment);
+                        var acceptedUsers = getAcceptedUsers(appointment);
                         var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
+                        var numberOfAcceptedUsers = acceptedUsers==="" ? 0 : acceptedUsers.split(",").length;
                         var btnClass = "btn btn-primary";
                         if (appointment==upcomingAppointment) {
                             btnClass = "btn btn-warning";
@@ -373,6 +465,14 @@
                                 } else {
                                     msg += "Absagen: " + cancelledUsers;
                                 }
+                                if (appointment.attributes.allowAcceptance == "true") {
+                                    msg += "<hr/>";
+                                    if (acceptedUsers == "") {
+                                        msg += "Keine Zusagen!";
+                                    } else {
+                                        msg += "Zusagen: " + acceptedUsers;
+                                    }
+                                }
                             }
                             msg += "<hr/>";
                             var aptMsg = appointment.attributes["message"];
@@ -390,10 +490,22 @@
                         html += "<div class=\"p-1\">";
                         html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">";
                         html += "<div>" + weekday + ". " + datestrvis;
-                        if (cancelled) {
-                            html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
+                        if (appointment.attributes.allowAcceptance=="true") {
+                            // three choices
+                            if (cancelled) {
+                                html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
+                            } else if (accepted) {
+                                html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                            } else {
+                                html += "<span style='float:right;color:gray;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>?</span>&nbsp;";
+                            }
                         } else {
-                            html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                            // two choices
+                            if (cancelled) {
+                                html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
+                            } else {
+                                html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                            }
                         }
                         html += "</div>";
                         html += "<div style='font-size:small'>" + _items[appointment.attributes["type"]];
@@ -401,6 +513,11 @@
                         if (numberOfCancelledUsers>0) {
                             if ((!suppressCancellation) || _superuser) {
                                 html += " (" + (numberOfCancelledUsers==1 ? "eine Absage" : numberOfCancelledUsers + " Absagen") + ")";
+                            }
+                        }
+                        if (numberOfAcceptedUsers>0) {
+                            if ((!suppressCancellation) || _superuser) {
+                                html += " (" + (numberOfAcceptedUsers==1 ? "eine Zusage" : numberOfAcceptedUsers + " Zusagen") + ")";
                             }
                         }
                         html += "</div>";

@@ -174,10 +174,25 @@
             for (var i=0; i<appointment.children.length; i++) {
                 var cancellation = appointment.children[i];
                 if (cancellation && cancellation.attributes.userid == _userId) {
-                    cancelled = true;
+                    if (!cancellation.attributes.acception || cancellation.attributes.acception == "" || cancellation.attributes.acception == "false") {
+                        cancelled = true;
+                    }
                 }
             }
             return cancelled;
+        }
+
+        function isAccepted(appointment) {
+            var accepted = false;
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                if (cancellation && cancellation.attributes.userid == _userId) {
+                    if (cancellation.attributes.acception == "true") {
+                        accepted = true;
+                    }
+                }
+            }
+            return accepted;
         }
 
         function getActiveUserCancellation(appointment) {
@@ -197,12 +212,32 @@
             for (var i=0; i<appointment.children.length; i++) {
                 var cancellation = appointment.children[i];
                 var name = _userMap[cancellation.attributes["userid"]];
-                if (!name || name=="") { name = cancellation.attributes["userid"]; }
-                cancelledUsers += sep+name;
-                sep = ", ";
+                var cancelled = (!cancellation.attributes.acception || cancellation.attributes.acception == "" || cancellation.attributes.acception == "false");
+                if (cancelled) {
+                    if (!name || name=="") { name = cancellation.attributes["userid"]; }
+                    cancelledUsers += sep+name;
+                    sep = ", ";
+                }
             }
             return cancelledUsers;
         }
+
+        function getAcceptedUsers(appointment) {
+            var acceptedUsers = "";
+            var sep = "";
+            for (var i=0; i<appointment.children.length; i++) {
+                var cancellation = appointment.children[i];
+                var name = _userMap[cancellation.attributes["userid"]];
+                var accepted = (cancellation.attributes.acception == "true");
+                if (accepted) {
+                    if (!name || name=="") { name = cancellation.attributes["userid"]; }
+                    acceptedUsers += sep+name;
+                    sep = ", ";
+                }
+            }
+            return acceptedUsers;
+        }
+
 
         function cancelAppointment(id) {
             var appointment = getElement(_data, id);
@@ -266,6 +301,7 @@
                 html += "<th scope='col'>Ort</th>";
                 if (_superuser) {
                     html += "<th scope='col'>Absagen</th>";
+                    html += "<th scope='col'>Zusagen</th>";
                 }
                 html += "<th scope='col'>Anmerkungen</th>";
                 html += "</tr>";
@@ -297,23 +333,38 @@
                         outdated = true;
                     }
                     var cancelled = isCancelled(appointment);
+                    var accepted = isAccepted(appointment);
                     var cancelledUsers = getCancelledUsers(appointment);
+                    var acceptedUsers = getAcceptedUsers(appointment);
 
                     var location = getLocation(appointment.attributes["location"], locationList);
 
                     html += "<tr " + (active?"class='table-warning'":"") + " >";
                     html += "<th scope='row'>" + (i+1) + "</th>";
                     html += "<td>" + items[appointment.attributes["type"]] + "</td>";
-                    if (cancelled) {
+                    if (appointment.attributes.allowAcceptance == "true") {
+                        // three choices
+                        if (cancelled) {
+                            html += "<td style='color:red;'>&nbsp;&nbsp;&#10008;</d>";
+                        } else if (accepted) {
+                            html += "<td style='color:green;'>&nbsp;&nbsp;&#10004;</d>";
+                        } else {
+                            html += "<td style='color:gray;'>&nbsp;&nbsp;?</d>";
+                        }
+                    } else {
+                        // two choices
+                        if (cancelled) {
                             html += "<td style='color:red;'>&nbsp;&nbsp;&#10008;</d>";
                         } else {
                             html += "<td style='color:green;'>&nbsp;&nbsp;&#10004;</d>";
                         }
+                    }
                     html += "<td>" + datestrvis + "</td>";
                     html += "<td>" + appointment.attributes["time"] + "</td>";
                     html += "<td>" + location + "</td>";
                     if (_superuser) {
                         html += "<td>" + cancelledUsers + "</td>";
+                        html += "<td>" + acceptedUsers + "</td>";
                     }
                     html += "<td style='color:blue'>" + (appointment.attributes["message"]?appointment.attributes["message"]:"") + "</td>";
                     html += "</tr>";

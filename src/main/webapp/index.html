@@ -183,7 +183,7 @@
                         html += "<button type='button' class='btn btn-danger' style='width:50%' onclick='javascript:setCancellation("+appointment.id+",false)\'>Termin absagen</button>";
                     }
                     if (cancelled || accepted) {
-                        html += "<button type='button' class='btn btn-outline-dark' style='width:50%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Antwort widerrufen</button>";
+                        html += "<button type='button' class='btn btn-outline-dark' style='width:50%' onclick='javascript:revokeCancellation("+appointment.id+")\'>Widerrufen</button>";
                     }
                 } else {
                     // TWO CHOICES
@@ -302,22 +302,25 @@
                 cancellationList.push(appointment.children[i].attributes["userid"]);
             }
             var workList = lookupElement(_data,"Work");
+            var prj = lookupElement(_data,"Project");
             for (var i=0; i<workList.length; i++) {
                 var work = workList[i];
-                var voiceMap = {};
-                for (var v=0; v<work.children.length; v++) {
-                    var voice = work.children[v];
-                    var singersList = voice.attributes["singers"].split(",");
-                    voiceMap[voice.attributes["shortid"]] = [];
-                    for (var s=0; s<singersList.length; s++) {
-                        if (!cancellationList.includes(singersList[s])) {
-                            var name = _userMap[singersList[s]];
-                            if (!name || name=="") { name = singersList[s]; }
-                            voiceMap[voice.attributes["shortid"]].push(name);
+                if (work.attributes["project"] === prj[0].attributes["id"]) {
+                    var voiceMap = {};
+                    for (var v=0; v<work.children.length; v++) {
+                        var voice = work.children[v];
+                        var singersList = voice.attributes["singers"].split(",");
+                        voiceMap[voice.attributes["shortid"]] = [];
+                        for (var s=0; s<singersList.length; s++) {
+                            if (!cancellationList.includes(singersList[s])) {
+                                var name = _userMap[singersList[s]];
+                                if (!name || name=="") { name = singersList[s]; }
+                                voiceMap[voice.attributes["shortid"]].push(name);
+                            }
                         }
                     }
+                    workMap[work.attributes["id"]] = voiceMap;
                 }
-                workMap[work.attributes["id"]] = voiceMap;
             }
             return workMap;
         }
@@ -329,24 +332,27 @@
                 cancellationList.push(appointment.children[i].attributes["userid"]);
             }
             var workList = lookupElement(_data,"Work");
+            var prj = lookupElement(_data,"Project");
             for (var i=0; i<workList.length; i++) {
                 var work = workList[i];
-                var voiceMap = {};
-                for (var v=0; v<work.children.length; v++) {
-                    var voice = work.children[v];
-                    var singersList = voice.attributes["singers"].split(",");
-                    if (singersList.includes(_userId)) {
-                        voiceMap[voice.attributes["shortid"]] = [];
-                        for (var s=0; s<singersList.length; s++) {
-                            if (!cancellationList.includes(singersList[s])) {
-                                var name = _userMap[singersList[s]];
-                                if (!name || name=="") { name = singersList[s]; }
-                                voiceMap[voice.attributes["shortid"]].push(name);
+                if (work.attributes["project"] === prj[0].attributes["id"]) {
+                    var voiceMap = {};
+                    for (var v=0; v<work.children.length; v++) {
+                        var voice = work.children[v];
+                        var singersList = voice.attributes["singers"].split(",");
+                        if (singersList.includes(_userId)) {
+                            voiceMap[voice.attributes["shortid"]] = [];
+                            for (var s=0; s<singersList.length; s++) {
+                                if (!cancellationList.includes(singersList[s])) {
+                                    var name = _userMap[singersList[s]];
+                                    if (!name || name=="") { name = singersList[s]; }
+                                    voiceMap[voice.attributes["shortid"]].push(name);
+                                }
                             }
                         }
                     }
+                    workMap[work.attributes["id"]] = voiceMap;
                 }
-                workMap[work.attributes["id"]] = voiceMap;
             }
             return workMap;
         }

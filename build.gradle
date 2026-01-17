@@ -77,7 +77,7 @@ dependencies {
     implementation("org.wuerthner.sport:websport:1.0.0-SNAPSHOT") {
         changing = true
     }
-    implementation("org.wuerthner.sport:sport:2.0.0") {
+    implementation("org.wuerthner.sport:sport:2.0.1-SNAPSHOT") {
         changing = true
     }
 

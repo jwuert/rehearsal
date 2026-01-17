@@ -384,7 +384,7 @@
 
             if (command==="setData") {
                 _data = jo["data"];
-                var directorArray = _data.attributes["director"].split(",");
+                var directorArray = _data.attributes["director"];
                 for (var i=0; i<directorArray.length; i++) { directorArray[i]=directorArray[i].trim();}
                 _orig = JSON.parse(JSON.stringify(_data));
                 addParents(_data, _data["id"]);

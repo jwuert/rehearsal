@@ -86,6 +86,18 @@
             return window.location.pathname.split("/")[1];
         }
 
+        function getElementByTypeAndId(data, type, id) {
+            var loc = null;
+            var locList = lookupElement(_data, type);
+            for (var i=0; i<locList.length; i++) {
+                if (locList[i].attributes["id"]==id) {
+                    loc = locList[i];
+                    break;
+                }
+            }
+            return loc;
+        }
+
         function showDialog(id, datestrvis) {
             var appointment = getElement(_data, id);
             var aptMsg = appointment.attributes["message"];
@@ -93,6 +105,12 @@
             var aptType = appointment.attributes["type"];
             var typeLabel = _items[aptType];
             var color = "";
+            var locId = appointment.attributes["location"];
+            var loc = getElementByTypeAndId(_data, "Location", locId);
+            var locName = loc.attributes["name"];
+            var locAddr = loc.attributes["address"];
+            var locPLZ = loc.attributes["plz"];
+            var locCity = loc.attributes["city"];
             var html = "<div class='modal-content'>";
 		    if (appointment.id == upcomingAppointment.id) {
 		        color="orange";
@@ -108,7 +126,8 @@
             html += "<table>";
             html += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
             html += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
-            html += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
+            html += "<tr><td>Ort </td><td>" + locName + "</td></tr>";
+            html += "<tr><td></td><td>" + locAddr + "<br/>" + locPLZ + " " + locCity + "</td></tr>";
             html += "</table>";
             var cancelledUsers = getCancelledUsers(appointment);
             var acceptedUsers = getAcceptedUsers(appointment);
@@ -449,6 +468,12 @@
                         var acceptedUsers = getAcceptedUsers(appointment);
                         var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
                         var numberOfAcceptedUsers = acceptedUsers==="" ? 0 : acceptedUsers.split(",").length;
+                        var locId = appointment.attributes["location"];
+                        var loc = getElementByTypeAndId(_data, "Location", locId);
+                        var locName = loc.attributes["name"];
+                        var locAddr = loc.attributes["address"];
+                        var locPLZ = loc.attributes["plz"];
+                        var locCity = loc.attributes["city"];
                         var btnClass = "btn btn-primary";
                         if (appointment==upcomingAppointment) {
                             btnClass = "btn btn-warning";
@@ -462,7 +487,8 @@
                             msg += "<table>";
                             msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
                             msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
-                            msg += "<tr><td>Ort </td><td>" + appointment.attributes["location"] + "</td></tr>";
+                            msg += "<tr><td>Ort </td><td>" + locName + "</td></tr>";
+                            msg += "<tr><td></td><td>" + locAddr + "<br/>" + locPLZ + " " + locCity + "</td></tr>";
                             msg += "</table>";
                             if (_superuser) {
                                 msg += "<hr/>";

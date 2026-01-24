@@ -57,6 +57,7 @@
                 ws = null;
                 document.getElementById("message").innerHTML="Tschöö!";
                 document.getElementById("timeline").innerHTML="";
+                document.getElementById("downloadSection").innerHTML="";
                 setTimeout(function() {
                     document.getElementById("dialog").innerHTML="";
                     document.getElementById("dialog").style.display='none';
@@ -484,7 +485,7 @@
                             var leitung = (_superuser ? " (Leitung)" : "");
                             var msg = "<h2 style='margin:0px'>Probenplaner</h2>";
                             msg += "<div style='font-style:italic;font-size:13px;width:100%;text-align:right;padding-right:8px'>";
-                            msg += "<a href=\"javascript:showInfo('Neu in Version 1.1','<ul><li>&#x2022; Neue Farbcodes</li><li>&#x2022; Anzeige der Adresse des Probenorts</li></ul>')\">Version 1.1</a></div>";
+                            msg += "<a href=\"javascript:showInfo('Neu in Version 1.2','<ul><li>&#x2022; Neue Farbcodes</li><li>&#x2022; Anzeige der Adresse des Probenorts</li><li>&#x2022; Button zum Herunterladen des Probenmaterials</li></ul>')\">Version 1.2</a></div>";
                             msg += "<div class=\"p-1\">";
                             msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html?login="+_login+"\")'>Zur Listenansicht</button>";
                             msg += "</div>";
@@ -655,7 +656,19 @@
     <div id="message"></div>
     <!-- div id="content" style="padding:10px">huhu</div -->
     <div id="timeline"></div>
+    <div id="downloadSection" style="margin:3px">
+        <button id='downloadButton' type='button' class='btn btn-dark' style="width:100%">Probematerial herunterladen</button>
+    </div>
+    </br>
+    </br>
 </div>
+<iframe id="downloadFrame" style="display:none;"></iframe>
+<script>
+    document.getElementById("downloadButton").addEventListener("click", function() {
+        const iframe = document.getElementById("downloadFrame");
+        iframe.src = "download?login=" + _login;
+    });
+</script>
 <style>
     #dialog {
       position: fixed;

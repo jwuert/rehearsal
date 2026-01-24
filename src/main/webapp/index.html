@@ -225,7 +225,7 @@
         }
 
         function showInfo(header, message) {
-            var html = "<div class='modal-content'>";
+            var html = "<div class='modal-content' style='border:3px solid #888'>";
             html += " <div class='modal-header'>";
             html += "  <h4 class='modal-title' align='center' style='width:100%;'>" + header + "</h4>";
 		    html += " </div>";
@@ -468,17 +468,23 @@
                         var acceptedUsers = getAcceptedUsers(appointment);
                         var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
                         var numberOfAcceptedUsers = acceptedUsers==="" ? 0 : acceptedUsers.split(",").length;
+                        var appointmentType = appointment.attributes["type"];
                         var locId = appointment.attributes["location"];
                         var loc = getElementByTypeAndId(_data, "Location", locId);
                         var locName = loc.attributes["name"];
                         var locAddr = loc.attributes["address"];
                         var locPLZ = loc.attributes["plz"];
                         var locCity = loc.attributes["city"];
-                        var btnClass = "btn btn-primary";
+                        var btnClass = appointmentType==="GENERAL" ? "btn btn-warning" :
+                                       appointmentType==="KONZERT" ? "btn btn-success" :
+                                       appointmentType==="PWE" ? "btn btn-info" :
+                                       appointmentType==="FEIER" ? "btn btn-secondary" :
+                                       "btn btn-primary";
                         if (appointment==upcomingAppointment) {
-                            btnClass = "btn btn-warning";
                             var leitung = (_superuser ? " (Leitung)" : "");
-                            var msg = "<h2>Probenplaner</h2>";
+                            var msg = "<h2 style='margin:0px'>Probenplaner</h2>";
+                            msg += "<div style='font-style:italic;font-size:13px;width:100%;text-align:right;padding-right:8px'>";
+                            msg += "<a href=\"javascript:showInfo('Neu in Version 1.1','<ul><li>&#x2022; Neue Farbcodes</li><li>&#x2022; Anzeige der Adresse des Probenorts</li></ul>')\">Version 1.1</a></div>";
                             msg += "<div class=\"p-1\">";
                             msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html?login="+_login+"\")'>Zur Listenansicht</button>";
                             msg += "</div>";

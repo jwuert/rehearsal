@@ -444,6 +444,7 @@
                 for (var i=0; i<list.length; i++) {
                     var appointment = list[i];
                     var aptId = appointment.id;
+                    var appointmentType = appointment.attributes["type"];
                     var suppressCancellation = getSuppressCancellation(appointment);
                     var dt = appointment.attributes["date"];
                     var dateYear = dt.substring(0,4);
@@ -462,7 +463,7 @@
                     var timestamp = new Date().getTime();
                     var today = new Date(timestamp - (timestamp % 86400000));
                     var outdated = false;
-                    if (d >= today && upcomingAppointment == "") {
+                    if (d >= today && appointmentType !== "ENTFAELLT" && upcomingAppointment == "") {
                         upcomingAppointment = appointment;
                     } else if (d < today) {
                         outdated = true;
@@ -474,7 +475,6 @@
                         var acceptedUsers = getAcceptedUsers(appointment);
                         var numberOfCancelledUsers = cancelledUsers==="" ? 0 : cancelledUsers.split(",").length;
                         var numberOfAcceptedUsers = acceptedUsers==="" ? 0 : acceptedUsers.split(",").length;
-                        var appointmentType = appointment.attributes["type"];
                         var locId = appointment.attributes["location"];
                         var loc = getElementByTypeAndId(_data, "Location", locId);
                         var locName = loc.attributes["name"];
@@ -485,6 +485,7 @@
                                        appointmentType==="KONZERT" ? "btn btn-success" :
                                        appointmentType==="PWE" ? "btn btn-info" :
                                        appointmentType==="FEIER" ? "btn btn-secondary" :
+                                       appointmentType==="ENTFAELLT" ? "btn btn-danger" :
                                        "btn btn-primary";
                         if (appointment==upcomingAppointment) {
                             var leitung = (_superuser ? " (Leitung)" : "");
@@ -498,9 +499,11 @@
                             msg += "Nächster Termin:<br/>";
                             msg += "<table>";
                             msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + dateShift + "</td></tr>";
-                            msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
-                            msg += "<tr><td>Ort </td><td>" + locName + "</td></tr>";
-                            msg += "<tr><td></td><td>" + locAddr + "<br/>" + locPLZ + " " + locCity + "</td></tr>";
+                            if (appointmentType != "ENTFAELLT") {
+                                msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
+                                msg += "<tr><td>Ort </td><td>" + locName + "</td></tr>";
+                                msg += "<tr><td></td><td>" + locAddr + "<br/>" + locPLZ + " " + locCity + "</td></tr>";
+                            }
                             msg += "</table>";
                             if (_superuser) {
                                 msg += "<hr/>";
@@ -531,8 +534,11 @@
                             }
                             document.getElementById("message").innerHTML=msg;
                         }
+                        var dialogCall = appointmentType != "ENTFAELLT"
+                            ? "onclick=\"javascript:showDialog("+aptId+",'" + datestrvis + dateShift + "')\""
+                            : "";
                         html += "<div class=\"p-1\">";
-                        html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis + dateShift + "')\">";
+                        html += "<button type=\"button\" " + (dialogCall==""?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" " + dialogCall + ">";
                         html += "<div>" + weekday + ". " + datestrvis + dateShiftShort;
                         if (appointment.attributes.allowAcceptance=="true") {
                             // three choices

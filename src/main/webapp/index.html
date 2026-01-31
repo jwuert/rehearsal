@@ -540,21 +540,23 @@
                         html += "<div class=\"p-1\">";
                         html += "<button type=\"button\" " + (dialogCall==""?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" " + dialogCall + ">";
                         html += "<div>" + weekday + ". " + datestrvis + dateShiftShort;
-                        if (appointment.attributes.allowAcceptance=="true") {
-                            // three choices
-                            if (cancelled) {
-                                html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
-                            } else if (accepted) {
-                                html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                        if (dialogCall !== "") {
+                            if (appointment.attributes.allowAcceptance=="true") {
+                                // three choices
+                                if (cancelled) {
+                                    html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
+                                } else if (accepted) {
+                                    html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                                } else {
+                                    html += "<span style='float:right;color:gray;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>?</span>&nbsp;";
+                                }
                             } else {
-                                html += "<span style='float:right;color:gray;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>?</span>&nbsp;";
-                            }
-                        } else {
-                            // two choices
-                            if (cancelled) {
-                                html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
-                            } else {
-                                html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                                // two choices
+                                if (cancelled) {
+                                    html += "<span style='float:right;color:red;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10008;</span>&nbsp;";
+                                } else {
+                                    html += "<span style='float:right;color:green;border-radius:5px;background:#d0e0ff;width:2em;padding:2px 6px 2px 6px'>&#10004;</span>&nbsp;";
+                                }
                             }
                         }
                         html += "</div>";

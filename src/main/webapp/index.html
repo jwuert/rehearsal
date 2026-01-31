@@ -451,7 +451,12 @@
                     var dateDay = dt.substring(8,10);
                     var datestr = dateYear + "-" + dateMonth + "-" + dateDay;
                     var datestrvis = dateDay + "." + dateMonth + "." + dateYear;
-
+                    var dateShift = "";
+                    var dateShiftShort = "";
+                    if (/[: ,]+/.test(dt)) {
+                        dateShift = " " + dt.split(/[: ,]+/)[1];
+                        dateShiftShort = " (" + dateShift.charAt(1) + ")";
+                    }
                     var d = new Date(datestr);
                     var weekday = dayName(d);
                     var timestamp = new Date().getTime();
@@ -485,14 +490,14 @@
                             var leitung = (_superuser ? " (Leitung)" : "");
                             var msg = "<h2 style='margin:0px'>Probenplaner</h2>";
                             msg += "<div style='font-style:italic;font-size:13px;width:100%;text-align:right;padding-right:8px'>";
-                            msg += "<a href=\"javascript:showInfo('Neu in Version 1.2','<ul><li>&#x2022; Neue Farbcodes</li><li>&#x2022; Anzeige der Adresse des Probenorts</li><li>&#x2022; Button zum Herunterladen des Probenmaterials</li></ul>')\">Version 1.2</a></div>";
+                            msg += "<a href=\"javascript:showInfo('Neu in Version 1.2.1','<ul><li>&#x2022; Neue Farbcodes</li><li>&#x2022; Anzeige der Adresse des Probenorts</li><li>&#x2022; Button zum Herunterladen des Probenmaterials</li><li>&#x2022; Termine am Vormittag, Nachmittag, Abend</li></ul>')\">Version 1.2.1</a></div>";
                             msg += "<div class=\"p-1\">";
                             msg += "<button type='button' class='btn btn-dark' style=\"width:100%\" onclick='javascipt:location.replace(\"calendar.html?login="+_login+"\")'>Zur Listenansicht</button>";
                             msg += "</div>";
                             msg += "<h6 style='padding-top:8px;padding-bottom:8px;text-align:center;width:100%'>" + _userName + leitung + "</h6>";
                             msg += "Nächster Termin:<br/>";
                             msg += "<table>";
-                            msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + "</td></tr>";
+                            msg += "<tr><td>Datum&nbsp;&nbsp;</td><td>" + datestrvis + dateShift + "</td></tr>";
                             msg += "<tr><td>Uhrzeit&nbsp;&nbsp;</td><td>" + appointment.attributes["time"] + "</td></tr>";
                             msg += "<tr><td>Ort </td><td>" + locName + "</td></tr>";
                             msg += "<tr><td></td><td>" + locAddr + "<br/>" + locPLZ + " " + locCity + "</td></tr>";
@@ -527,8 +532,8 @@
                             document.getElementById("message").innerHTML=msg;
                         }
                         html += "<div class=\"p-1\">";
-                        html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis+ "')\">";
-                        html += "<div>" + weekday + ". " + datestrvis;
+                        html += "<button type=\"button\" " + (outdated?"disabled":"") + " class=\"" + btnClass + "\" style=\"width:100%\" onclick=\"javascript:showDialog("+aptId+",'" + datestrvis + dateShift + "')\">";
+                        html += "<div>" + weekday + ". " + datestrvis + dateShiftShort;
                         if (appointment.attributes.allowAcceptance=="true") {
                             // three choices
                             if (cancelled) {
@@ -591,6 +596,7 @@
                 _superuser = (directorArray.includes(_userId));
                 showTimeline();
                 hideDialog();
+                document.getElementById("downloadSection").style.display='inline';
             } else if (command==="info") {
                 var header = jo["header"];
                 var message = jo["message"];
@@ -656,8 +662,8 @@
     <div id="message"></div>
     <!-- div id="content" style="padding:10px">huhu</div -->
     <div id="timeline"></div>
-    <div id="downloadSection" style="margin:3px">
-        <button id='downloadButton' type='button' class='btn btn-dark' style="width:100%">Probematerial herunterladen</button>
+    <div id="downloadSection" style="margin:3px;display:none">
+        <button id='downloadButton' type='button' class='btn btn-dark' style="width:100%">Probenmaterial herunterladen</button>
     </div>
     </br>
     </br>
@@ -685,7 +691,7 @@
     }
 </style>
 
-<div id="dialog" style="display:none"></div>
+<div id="dialog" style="display:inline;"><div style="text-align:center;border:2px solid lightblue"><br/>Probenplaner<br/><br/></div></div>
 </div>
 </body>
 </html>
